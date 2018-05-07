@@ -233,7 +233,7 @@ component extends="preside.system.base.AdminHandler" {
 				messagebox.error( translateResource( "cms:assetmanager.assets.could.not.be.moved.across.locations.error" ) );
 				success = false;
 			}
-			
+
 			if ( !success ) {
 				setNextEvent( url=event.buildAdminLink( linkTo="assetManager", queryString="folder=" & fromFolder ) );
 			}
@@ -358,7 +358,7 @@ component extends="preside.system.base.AdminHandler" {
 			, denyUsers     = ListToArray( rc.deny_access_to_users     ?: "" )
 		);
 
-		messageBox.info( translateResource( uri="cms:assetmanager.folder.edited.confirmation", data=[ formData.label ?: '' ] ) );
+		messageBox.info( translateResource( uri="cms:assetmanager.folder.edited.confirmation", data=[ prc.folder.label ?: '' ] ) );
 		setNextEvent( url=event.buildAdminLink( linkTo="assetManager", queryString="folder=#folderId#" ) );
 	}
 
@@ -412,7 +412,7 @@ component extends="preside.system.base.AdminHandler" {
 			setNextEvent( url=event.buildAdminLink( linkTo="assetManager.setfolderlocation", querystring="folder=#parentFolder#&id=#folderId#" ), persistStruct=formData );
 		}
 
-		messageBox.info( translateResource( uri="cms:assetmanager.folder.location.set.confirmation", data=[ formData.label ?: '' ] ) );
+		messageBox.info( translateResource( uri="cms:assetmanager.folder.location.set.confirmation", data=[ prc.folder.label ?: '' ] ) );
 		setNextEvent( url=event.buildAdminLink( linkTo="assetManager", queryString="folder=#folderId#" ) );
 	}
 
@@ -514,6 +514,7 @@ component extends="preside.system.base.AdminHandler" {
 			} catch ( any e ) {
 
 				if ( ReFindNoCase( "^PresideCMS\.AssetManager", e.type ?: "" ) ) {
+					result.success = false;
 					result.message = translateResource( ReReplace( e.type, "^PresideCMS\.", "cms:" ) );
 				} else {
 					logError( e );
@@ -819,7 +820,7 @@ component extends="preside.system.base.AdminHandler" {
 
 	function ajaxSearchAssets( event, rc, prc ) {
 		var records = assetManagerService.searchAssets(
-			  maxRows      = rc.maxRows      ?: 1000
+			  maxRows      = rc.maxRows      ?: 100
 			, searchQuery  = rc.q            ?: ""
 			, savedFilters = rc.savedFilters ?: ""
 			, ids          = ListToArray( rc.values       ?: "" )
@@ -850,7 +851,7 @@ component extends="preside.system.base.AdminHandler" {
 
 	function getFoldersForAjaxSelectControl( event, rc, prc ) {
 		var records = assetManagerService.getFoldersForSelectList(
-			  maxRows      = rc.maxRows ?: 1000
+			  maxRows      = rc.maxRows ?: 100
 			, searchQuery  = rc.q       ?: ""
 			, ids          = ListToArray( rc.values ?: "" )
 		);
@@ -978,7 +979,7 @@ component extends="preside.system.base.AdminHandler" {
 		if ( asset.recordCount ) {
 			asset = QueryRowToStruct( asset );
 
-			if ( !IsNull( binary ) ) {
+			if ( !IsNull( local.binary ) ) {
 				asset.append( imageManipulationService.getImageInformation( binary ) );
 				StructDelete( asset, "metadata" );
 				StructDelete( asset, "colormodel" );

@@ -128,6 +128,9 @@ component {
 			if ( Len( Trim( attributes.uniqueindexes ?: "" ) ) ) {
 				return false;
 			}
+			if ( Len( Trim( attributes.formula ?: "" ) ) ) {
+				return false;
+			}
 			if ( propertyName.startsWith( "_" ) ) {
 				return false;
 			}
@@ -188,7 +191,7 @@ component {
 
 		return _getPresideObjectService().selectData(
 			  objectName   = arguments.objectName
-			, selectFields = [ "#idField# as id", "${labelfield} as label", sortField ]
+			, selectFields = [ "#arguments.objectName#.#idField# as id", "${labelfield} as label", sortField ]
 			, orderby      = sortField
 		);
 	}
@@ -292,15 +295,15 @@ component {
 			result.totalRecords = result.records.recordCount;
 		} else {
 			args = {
-				  objectName   = arguments.objectName
-				, id           = arguments.recordId
-				, selectFields = [ "count( * ) as nRows" ]
+				  objectName      = arguments.objectName
+				, id              = arguments.recordId
+				, recordCountOnly = true
 			};
 			if ( Len( Trim( arguments.property ) ) ) {
 				args.fieldName = arguments.property;
 			}
 
-			result.totalRecords = _getPresideObjectService().getRecordVersions( argumentCollection = args ).nRows;
+			result.totalRecords = _getPresideObjectService().getRecordVersions( argumentCollection = args );
 		}
 
 		return result;
@@ -402,7 +405,7 @@ component {
 			, autoGroupBy  = true
 		};
 		var transformResult = function( required struct result, required string labelRenderer ) {
-			result.text = _getLabelRendererService().renderLabel( labelRenderer, result );
+			result.text = replaceList(_getLabelRendererService().renderLabel( labelRenderer, result ), "&lt;,&gt;,&amp;,&quot;", '<,>,&,"');
 			result.value = result.id;
 			result.delete( "label" );
 			result.delete( "id" );

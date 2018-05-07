@@ -546,6 +546,7 @@ component displayName="Forms service" {
 		,          string  fieldNameSuffix         = ""
 	) {
 		var ruleset = _getValidationRulesetFromFormName( argumentCollection=arguments );
+		var result  = arguments.preProcessData ? preProcessForm( argumentCollection = arguments ) : "";
 		var data    = Duplicate( arguments.formData );
 
 		// add active "site" id to form data, should unique indexes require checking against a specific site
@@ -555,7 +556,7 @@ component displayName="Forms service" {
 			return _getValidationEngine().validate(
 				  ruleset         = ruleset
 				, data            = data
-				, result          = preProcessForm( argumentCollection = arguments )
+				, result          = result
 				, ignoreMissing   = arguments.ignoreMissing
 				, fieldNamePrefix = arguments.fieldNamePrefix
 				, fieldNameSuffix = arguments.fieldNameSuffix
@@ -670,13 +671,13 @@ component displayName="Forms service" {
 	 * @createIfNotExists.hint Whether or not to create and register the form definition if it does not already exist.
 	 */
 	public string function getMergedFormName( required string formName, required any mergeWithFormName, boolean createIfNotExists=true ) {
-		var mergedName = formName;
+		var mergedName = _getSiteTemplatePrefix() & formName;
 
 		if ( !isArray( mergeWithFormName ) ) {
 			mergeWithFormName = [ mergeWithFormName ];
 		}
 		for( var formNameToMerge in mergeWithFormName ) {
-			mergedName &= ".merged.with." & formNameToMerge;
+			mergedName &= ".merged.with." & _getSiteTemplatePrefix() & formNameToMerge;
 		}
 
 		if ( createIfNotExists && !formExists( mergedName ) ) {

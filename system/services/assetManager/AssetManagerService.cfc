@@ -360,7 +360,7 @@ component displayName="AssetManager Service" {
 			  selectFields = [ "asset_folder.id", "asset_folder.label", "asset_folder.access_restriction", "asset_folder.is_system_folder", "storage_location.name as storage_location" ]
 			, filter       = filter
 			, extraFilters = [ _getExcludeHiddenFilter() ]
-			, groupBy      = "asset_folder.id,asset_folder.label,asset_folder.access_restriction,asset_folder.is_system_folder,storage_location.name"
+			, autoGroupBy  = true
 			, orderBy      = "label"
 		);
 
@@ -713,7 +713,7 @@ component displayName="AssetManager Service" {
 
 		if ( _autoExtractDocumentMeta() ) {
 			var fileBinary = getAssetBinary( arguments.assetId );
-			if ( !IsNull( fileBinary ) ) {
+			if ( !IsNull( local.fileBinary ) ) {
 				var rawText = _getDocumentMetadataService().getText( fileBinary );
 				if ( Len( Trim( rawText ) ) ) {
 					_getAssetDao().updateData( id=arguments.assetId, data={ raw_text_content=rawText } );

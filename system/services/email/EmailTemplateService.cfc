@@ -408,12 +408,13 @@ component {
 	) {
 		arguments.type = arguments.type == "text" ? "text" : "html";
 		var replaced = JavaCast( "String", arguments.text );
+		var Matcher  = CreateObject( "java", "java.util.regex.Matcher" );
 
 		for( var paramName in arguments.params ) {
 			var token = "(?i)\Q${#paramName#}\E";
 			var value = IsSimpleValue( arguments.params[ paramName ] ) ? arguments.params[ paramName ] : ( arguments.params[ paramName ][ arguments.type ] ?: "" );
 
-			replaced = replaced.replaceAll( token, value );
+			replaced = replaced.replaceAll( token, Matcher.quoteReplacement( value ) );
 		}
 
 		return replaced;
@@ -537,7 +538,8 @@ component {
 	public array function listDueOneTimeScheduleTemplates() {
 		var records = $getPresideObject( "email_template" ).selectData(
 			  selectFields       = [ "id" ]
-			, filter             = { sending_method="scheduled", schedule_type="fixeddate", schedule_sent=false }
+			, filter             = "sending_method = :sending_method and schedule_type = :schedule_type and (schedule_sent is null or schedule_sent = :schedule_sent)"
+			, filterParams       = { sending_method="scheduled", schedule_type="fixeddate", schedule_sent=false }
 			, extraFilters       = [ { filter="schedule_date <= :schedule_date", filterParams={ schedule_date=_getNow() } } ]
 			, orderBy            = "schedule_date"
 			, allowDraftVersions = false
@@ -585,7 +587,7 @@ component {
 			var binary = assetManagerService.getAssetBinary( id=asset.id, throwOnMissing=false );
 			var type   = assetManagerService.getAssetType( name=asset.asset_type, throwOnMissing=false );
 
-			if ( !IsNull( binary ?: NullValue() ) ) {
+			if ( !IsNull( local.binary ) ) {
 				attachments.append({
 					  binary          = binary
 					, name            = asset.title & "." & ( type.extension ?: "" )

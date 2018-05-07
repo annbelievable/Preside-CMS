@@ -55,12 +55,6 @@
 			if ( arguments.forceNewInstance || !request.keyExists( key ) ) {
 				var logger = _getTestLogger();
 				var mockFeatureService = getMockBox().createEmptyMock( "preside.system.services.features.FeatureService" );
-				var objReader = new preside.system.services.presideObjects.PresideObjectReader(
-					  dsn = application.dsn
-					, tablePrefix = arguments.defaultPrefix
-					, interceptorService = arguments.interceptorService
-					, featureService = mockFeatureService
-				);
 				var mockRequestContext = getMockBox().createStub();
 				var cachebox       = arguments.cachebox ?: _getCachebox( cacheKey="_cacheBox" & key, forceNewInstance=arguments.forceNewInstance );
 				var dbInfoService  = new preside.system.services.database.DbInfoService();
@@ -69,6 +63,13 @@
 				var adapterFactory = new preside.system.services.database.adapters.AdapterFactory(
 					  cache         = cachebox.getCache( "PresideSystemCache" )
 					, dbInfoService = dbInfoService
+				);
+				var objReader = new preside.system.services.presideObjects.PresideObjectReader(
+					  dsn = application.dsn
+					, tablePrefix = arguments.defaultPrefix
+					, interceptorService = arguments.interceptorService
+					, featureService = mockFeatureService
+					, adapterFactory = adapterFactory
 				);
 				var schemaVersioning = new preside.system.services.presideObjects.sqlSchemaVersioning(
 					  adapterFactory = adapterFactory
@@ -100,12 +101,11 @@
 				mockFilterService.$( "getFilter", {} );
 				mockFeatureService.$( "isFeatureEnabled", true );
 
+				mockRequestContext.$( "isAdminUser", true );
+				mockRequestContext.$( "getAdminUserId", "" );
+				mockRequestContext.$( "getUseQueryCache", true );
 				if ( !StructKeyExists( arguments, "coldbox" ) ) {
-					var event   = getMockbox().createStub();
-
-					event.$( "isAdminUser", true );
-					event.$( "getAdminUserId", "" );
-					coldbox.$( "getRequestContext", event );
+					coldbox.$( "getRequestContext", mockRequestContext );
 				}
 
 				request[ key ] = new preside.system.services.presideObjects.PresideObjectService(

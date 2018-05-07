@@ -23,7 +23,6 @@ component displayName="Preside Object Service" {
 	 * @filterService.inject          presideObjectSavedFilterService
 	 * @cache.inject                  cachebox:PresideSystemCache
 	 * @defaultQueryCache.inject      cachebox:DefaultQueryCache
-	 * @coldboxController.inject      coldbox
 	 * @interceptorService.inject     coldbox:InterceptorService
 	 */
 	public any function init(
@@ -39,7 +38,6 @@ component displayName="Preside Object Service" {
 		, required any     filterService
 		, required any     cache
 		, required any     defaultQueryCache
-		, required any     coldboxController
 		, required any     interceptorService
 		,          boolean reloadDb = true
 	) {
@@ -171,7 +169,7 @@ component displayName="Preside Object Service" {
 		,          string  having              = ""
 		,          numeric maxRows             = 0
 		,          numeric startRow            = 1
-		,          boolean useCache            = true
+		,          boolean useCache            = _getUseCacheDefault()
 		,          boolean fromVersionTable    = false
 		,          numeric specificVersion     = 0
 		,          boolean allowDraftVersions  = $getRequestContext().showNonLiveContent()
@@ -208,7 +206,7 @@ component displayName="Preside Object Service" {
 			_announceInterception( "onCreateSelectDataCacheKey", args );
 
 			var cachedResult = _getDefaultQueryCache().get( args.cacheKey );
-			if ( !IsNull( cachedResult ) ) {
+			if ( !IsNull( local.cachedResult ) ) {
 				return cachedResult;
 			}
 		}
@@ -941,6 +939,7 @@ component displayName="Preside Object Service" {
 					  objectName   = pivotTable
 					, selectFields = currentSelect
 					, filter       = { "#sourceFk#" = arguments.sourceId }
+					, useCache     = false
 				);
 
 				for( var record in currentRecords ) {
@@ -1230,7 +1229,7 @@ component displayName="Preside Object Service" {
 	 * @fieldName.hint  Optional name of one of the object's property which which to filter the history. Doing so will show only versions in which this field changed.
 	 *
 	 */
-	public query function getRecordVersions( required string objectName, required string id, string fieldName ) autodoc=true {
+	public any function getRecordVersions( required string objectName, required string id, string fieldName ) autodoc=true {
 		var args = {};
 		var idField = getIdField( arguments.objectName );
 
@@ -1894,7 +1893,7 @@ component displayName="Preside Object Service" {
 			paramName = arguments.prefix & ReReplace( key, "[\.\$]", "__", "all" );
 			dataType  = arguments.dbAdapter.sqlDataTypeToCfSqlDatatype( cols[ ListLast( key, "." ) ].dbType );
 
-			if ( not StructKeyExists( arguments.data, key ) ) { // should use IsNull() arguments.data[key] but bug in Railo prevents this
+			if ( !StructKeyExists( arguments.data, key ) ) { // should use IsNull() arguments.data[key] but bug in Railo prevents this
 				param = {
 					  name  = paramName
 					, value = NullValue()
@@ -1992,7 +1991,7 @@ component displayName="Preside Object Service" {
 		var cacheKey   = _removeDynamicElementsFromForeignObjectsCacheKey( "Detected foreign objects for generated SQL. Obj: #arguments.objectName#. Data: #StructKeyList( arguments.data )#. Fields: #ArrayToList( arguments.selectFields )#. Order by: #arguments.orderBy#. Filter: #IsStruct( filter ) ? StructKeyList( filter ) : filter#. Having: #having#" );
 		var objects    = cache.get( cacheKey );
 
-		if ( not IsNull( objects ) ) {
+		if ( !IsNull( local.objects ) ) {
 			return objects;
 		}
 
@@ -2192,7 +2191,7 @@ component displayName="Preside Object Service" {
 
 			joins = joinsCache.get( joinsCacheKey );
 
-			if ( IsNull( joins ) ) {
+			if ( IsNull( local.joins ) ) {
 				joins = _getRelationshipGuidance().calculateJoins( objectName = arguments.objectName, joinTargets = joinTargets, forceJoins = arguments.forceJoins );
 
 				joinsCache.set( joinsCacheKey, joins );
@@ -2773,7 +2772,7 @@ component displayName="Preside Object Service" {
 				}
 
 				var generatedValue = _generateValue( arguments.objectName, prop.generator, newData, prop );
-				if ( !IsNull( generatedValue ) ) {
+				if ( !IsNull( local.generatedValue ) ) {
 					generated[ propName ] = newData[ propName ] = generatedValue;
 				}
 			}
@@ -3064,5 +3063,9 @@ component displayName="Preside Object Service" {
 	}
 	private void function _setAliasCache( required struct aliasCache ) {
 		_aliasCache = arguments.aliasCache;
+	}
+
+	private boolean function _getUseCacheDefault() {
+		return $getRequestContext().getUseQueryCache();
 	}
 }

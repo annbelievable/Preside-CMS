@@ -111,7 +111,7 @@ component displayName="Admin permissions service" {
 
 		if ( Len( Trim( arguments.context ) ) && arguments.contextKeys.len() ) {
 			var contextPerm = _getContextPermission( argumentCollection=arguments );
-			if ( !IsNull( contextPerm ) && IsBoolean( contextPerm ) ) {
+			if ( !IsNull( local.contextPerm ) && IsBoolean( contextPerm ) ) {
 				return contextPerm;
 			}
 		}
@@ -319,9 +319,9 @@ component displayName="Admin permissions service" {
 		var cachedContextPerms = _getCacheProvider().getOrSet( objectKey=cacheKey, produce=function(){
 			var permsToCache = {};
 			var permsFromDb  = _getContextPermDao().selectData(
-				  selectFields = [ "Max( granted ) as granted", "context_key" ]
+				  selectFields = [ "granted", "context_key" ]
 				, filter       = { context = args.context, permission_key = args.permissionKey, security_group = userGroups }
-				, groupBy      = "context_key"
+				, orderBy      = "context_key, granted"
 				, useCache     = false
 			);
 

@@ -13,11 +13,17 @@ component {
 	}
 
 // public api
-	public boolean function setMaintenanceMode( required string maintenanceHtml, required array allowedIps, required string bypassPassword ) {
+	public boolean function setMaintenanceMode(
+		  required string  maintenanceHtml
+		, required array   allowedIps
+		, required string  bypassPassword
+		, required boolean tasksEnabled
+	) {
 		var settings = {
 			  html           = arguments.maintenanceHtml
 			, allowedIps     = arguments.allowedIps
 			, bypassPassword = arguments.bypassPassword
+			, tasksEnabled   = arguments.tasksEnabled
 		};
 
 		_setApplicationVariable( settings );
@@ -40,7 +46,7 @@ component {
 	public struct function getMaintenanceModeSettings() {
 		var settings = _getApplicationVariable();
 
-		if ( IsNull( settings ) ) {
+		if ( IsNull( local.settings ) ) {
 			settings = _readMaintenanceModeFromFile();
 			_setApplicationVariable( settings );
 		}
